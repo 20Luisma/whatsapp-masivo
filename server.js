@@ -1,22 +1,25 @@
 const express = require('express');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const csv = require('csv-parser');
+const multer = require('multer');
+const mime = require('mime-types');
 const { Readable } = require('stream');
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const fs = require('fs');
+const path = require('path');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
 const app = express();
 const port = 3000;
 
-// 🔗 URL de tu hoja de Google Sheets en formato CSV
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1oTG-PaDx0qs4f8CkThL2pmAV90JacvViIWxIH0Vwsh0/export?format=csv';
 
-app.use(express.json());
 app.use(express.static('public'));
+const upload = multer({ dest: 'uploads/' });
 
-// ✅ Leer contactos desde Google Sheets (soluciona fetch is not a function)
+// Leer contactos desde Google Sheets
 app.get('/contactos', async (req, res) => {
   try {
-    const fetch = (await import('node-fetch')).default;
     const response = await fetch(SHEET_CSV_URL);
     const text = await response.text();
     const contactos = [];
@@ -40,7 +43,7 @@ app.get('/contactos', async (req, res) => {
   }
 });
 
-// 📲 Configurar cliente de WhatsApp
+// Inicializar WhatsApp
 const client = new Client({
   authStrategy: new LocalAuth()
 });
@@ -54,31 +57,49 @@ client.on('ready', () => {
   console.log('\n✅ WhatsApp está conectado y listo.\n');
 });
 
-// ✅ Endpoint para enviar mensaje a todos los contactos
-app.post('/enviar', async (req, res) => {
-  const { contactos, mensaje } = req.body;
+// Enviar mensajes con o sin imagen
+app.post('/enviar', upload.single('imagen'), async (req, res) => {
+  const { mensaje, contactos } = req.body;
+  const lista = JSON.parse(contactos || '[]');
 
-  if (!mensaje || !Array.isArray(contactos)) {
-    return res.status(400).json({ status: 'Faltan datos válidos' });
+  if (lista.length === 0) {
+    return res.status(400).json({ status: 'No se recibieron contactos' });
   }
 
   try {
-    for (const { Telefono, Nombre } of contactos) {
+    for (const { Telefono, Nombre } of lista) {
       const numero = `${Telefono}@c.us`;
-      await client.sendMessage(numero, mensaje);
-      console.log(`📤 Enviado a ${Nombre} (${Telefono})`);
+
+      try {
+        if (req.file) {
+          const fileData = fs.readFileSync(req.file.path);
+          const base64Data = fileData.toString('base64');
+          const mimeType = mime.lookup(req.file.originalname);
+          const media = new MessageMedia(mimeType, base64Data, req.file.originalname);
+
+          console.log(`📎 Enviando imagen a ${Nombre} (${Telefono}) - tipo: ${mimeType}`);
+          await client.sendMessage(numero, media, { caption: mensaje || '' });
+        } else if (mensaje) {
+          await client.sendMessage(numero, mensaje);
+          console.log(`💬 Enviado mensaje a ${Nombre} (${Telefono})`);
+        }
+      } catch (err) {
+        console.error(`❌ Error enviando a ${Nombre}:`, err.message);
+      }
     }
 
+    if (req.file) fs.unlinkSync(req.file.path); // limpiar archivo temporal
+
     res.json({ status: 'Mensajes enviados correctamente' });
-  } catch (error) {
-    console.error('❌ Error al enviar:', error.message);
+  } catch (err) {
+    console.error('❌ Error al enviar:', err.message);
     res.status(500).json({ status: 'Error al enviar mensajes' });
   }
 });
 
 client.initialize();
 
-// 🟢 Iniciar el servidor
+// Iniciar servidor
 app.listen(port, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
 });

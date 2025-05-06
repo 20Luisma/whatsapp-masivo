@@ -73,7 +73,6 @@
       text-align: center;
     }
 
-    /* ✅ Estilo ventana emergente */
     .toast {
       visibility: hidden;
       min-width: 250px;
@@ -102,7 +101,10 @@
     <h2>Enviar WhatsApp Masivo</h2>
 
     <label for="mensaje">Mensaje a enviar:</label>
-    <textarea id="mensaje" placeholder="Escribí tu mensaje..." rows="4" required></textarea>
+    <textarea id="mensaje" placeholder="Escribí tu mensaje..." rows="4"></textarea>
+
+    <label for="imagen">Adjuntar imagen (opcional):</label>
+    <input type="file" id="imagen" accept="image/*" />
 
     <button onclick="enviarTodos()">Enviar a todos</button>
 
@@ -119,7 +121,6 @@
     </table>
   </div>
 
-  <!-- ✅ Toast flotante -->
   <div id="toast" class="toast">📤 Mensajes enviados correctamente</div>
 
   <script>
@@ -149,12 +150,22 @@
 
     async function enviarTodos() {
       const mensaje = document.getElementById('mensaje').value;
-      if (!mensaje) return alert('Escribí un mensaje primero.');
+      const imagenInput = document.getElementById('imagen');
+      const imagen = imagenInput.files[0];
+
+      if (!mensaje && !imagen) {
+        alert('Escribí un mensaje o adjuntá una imagen.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('mensaje', mensaje);
+      formData.append('contactos', JSON.stringify(contactos));
+      if (imagen) formData.append('imagen', imagen);
 
       const res = await fetch('/enviar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contactos, mensaje })
+        body: formData
       });
 
       const data = await res.json();
@@ -166,3 +177,5 @@
   </script>
 </body>
 </html>
+
+
