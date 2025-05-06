@@ -1,44 +1,41 @@
 # 📲 WhatsApp Masivo con Google Sheets
 
-Este proyecto permite enviar mensajes de WhatsApp de forma masiva a una lista de contactos almacenada en una hoja de cálculo de Google Sheets. Está desarrollado en Node.js con una interfaz web clara, moderna y adaptable.
+Este proyecto permite enviar mensajes de WhatsApp de forma masiva a una lista de contactos almacenada en Google Sheets, desde una interfaz web intuitiva y moderna. Además, ahora también permite adjuntar imágenes en los mensajes.
 
 ## 🚀 Funcionalidades
 
-- ✅ Carga automática de contactos desde Google Sheets (formato CSV público)
-- ✅ Interfaz web para visualizar los contactos
-- ✅ Campo de texto para redactar un mensaje común
-- ✅ Envío de mensajes a todos los contactos con un clic
-- ✅ Notificación emergente visual tras cada envío
-- ✅ Estética moderna basada en tonos azules tipo **Creawebes.com**
+- ✅ Carga automática de contactos desde una hoja pública de Google Sheets
+- ✅ Interfaz web clara para escribir mensajes
+- ✅ Subida opcional de imágenes (.jpg, .png)
+- ✅ Envío de texto, imagen o ambos a todos los contactos
+- ✅ Confirmación visual con notificación emergente
+- ✅ Scripts `.bat` para lanzar el sistema rápidamente
 
 ## 🧰 Tecnologías utilizadas
 
-- Node.js
-- Express
+- Node.js + Express
 - whatsapp-web.js
-- Google Sheets (como fuente de datos)
-- HTML + CSS + JS
+- Google Sheets (CSV)
+- HTML + CSS + JavaScript
 - Git + GitHub
 
 ## 📝 Requisitos
 
 - Tener Node.js instalado
-- Tener WhatsApp vinculado en el navegador
-- Una hoja de cálculo pública de Google con este formato:
+- Vincular WhatsApp Web la primera vez
+- Usar una hoja pública de Google con columnas:
 
 | Nombre | Telefono     |
 |--------|--------------|
-| Martín | 34611223344  |
-| Laura  | 34619998877  |
+| Juan   | 34611223344  |
+| Marta  | 34619998877  |
 
-> ⚠️ Asegurate de que tu hoja esté en modo “Cualquiera con el enlace puede ver” y exportable como CSV.
+## ▶️ Uso
 
----
-
-## 🛠 Instalación y uso
+1. Clonar el repositorio:
 
 ```bash
 git clone https://github.com/20Luisma/whatsapp-masivo.git
 cd whatsapp-masivo
 npm install
-node server.js
+
